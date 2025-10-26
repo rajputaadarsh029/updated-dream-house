@@ -1,0 +1,98 @@
+{
+  "id": "175f324f15f9479882419027f5d6108b",
+  "name": "villa",
+  "layout": {
+    "rooms": [
+      {
+        "name": "Living Room",
+        "size": 5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "name": "Kitchen",
+        "size": 3.5,
+        "x": 5.5,
+        "y": 0
+      },
+      {
+        "name": "Bedroom 1",
+        "size": 3.5,
+        "x": 0,
+        "y": 4
+      },
+      {
+        "name": "Bathroom 1",
+        "size": 2,
+        "x": 4,
+        "y": 4
+      },
+      {
+        "name": "Bedroom 2",
+        "size": 3.5,
+        "x": 0,
+        "y": 8
+      },
+      {
+        "name": "Bathroom 2",
+        "size": 2,
+        "x": 4,
+        "y": 8
+      },
+      {
+        "name": "Bedroom 3",
+        "size": 3.5,
+        "x": 0,
+        "y": 12
+      },
+      {
+        "name": "Bathroom 3",
+        "size": 2,
+        "x": 4,
+        "y": 12
+      },
+      {
+        "name": "Bedroom 4",
+        "size": 3.5,
+        "x": 0,
+        "y": 16
+      },
+      {
+        "name": "Bathroom 4",
+        "size": 2,
+        "x": 4,
+        "y": 16
+      },
+      {
+        "name": "Bedroom 5",
+        "size": 3.5,
+        "x": 0,
+        "y": 20
+      },
+      {
+        "name": "Bathroom 5",
+        "size": 2,
+        "x": 4,
+        "y": 20
+      },
+      {
+        "name": "Bedroom 6",
+        "size": 3.5,
+        "x": 0,
+        "y": 24
+      },
+      {
+        "name": "Bathroom 6",
+        "size": 2,
+        "x": 4,
+        "y": 24
+      }
+    ],
+    "meta": {
+      "description": "villa",
+      "mood": "cozy",
+      "bedrooms": 6
+    }
+  },
+  "owner": "aadarsh"
+}

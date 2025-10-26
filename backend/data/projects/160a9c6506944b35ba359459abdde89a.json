@@ -1,0 +1,50 @@
+{
+  "id": "160a9c6506944b35ba359459abdde89a",
+  "name": "eeee",
+  "layout": {
+    "rooms": [
+      {
+        "name": "Living Room",
+        "size": 5,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "name": "Kitchen",
+        "size": 3.5,
+        "x": 5.5,
+        "y": 0
+      },
+      {
+        "name": "Bedroom 1",
+        "size": 3.5,
+        "x": 0,
+        "y": 4
+      },
+      {
+        "name": "Bathroom 1",
+        "size": 2,
+        "x": 4,
+        "y": 4
+      },
+      {
+        "name": "Bedroom 2",
+        "size": 3.5,
+        "x": 0,
+        "y": 8
+      },
+      {
+        "name": "Bathroom 2",
+        "size": 2,
+        "x": 4,
+        "y": 8
+      }
+    ],
+    "meta": {
+      "description": "eeee",
+      "mood": "cozy",
+      "bedrooms": 2
+    }
+  },
+  "owner": "avinash"
+}

@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "id": "03fb7fe5d3d74850a4769094639a498e",
+    "created": "2025-10-13T16:33:03.592906",
+    "name": "My Project"
+  },
+  "project": {
+    "id": "da89ab36194f432d8eafa1b8a2f8306a",
+    "name": "My Project",
+    "layout": {
+      "rooms": [
+        {
+          "name": "Living Room",
+          "size": 5,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "name": "Kitchen",
+          "size": 3.5,
+          "x": 5.5,
+          "y": 0
+        },
+        {
+          "name": "Bedroom 1",
+          "size": 3.5,
+          "x": 0,
+          "y": 4
+        },
+        {
+          "name": "Bathroom 1",
+          "size": 2,
+          "x": 4,
+          "y": 4
+        },
+        {
+          "name": "Bedroom 2",
+          "size": 3.5,
+          "x": 0,
+          "y": 8
+        },
+        {
+          "name": "Bathroom 2",
+          "size": 2,
+          "x": 4,
+          "y": 8
+        }
+      ],
+      "meta": {
+        "description": "",
+        "mood": "cozy",
+        "bedrooms": 2
+      }
+    },
+    "owner": "avinash"
+  }
+}

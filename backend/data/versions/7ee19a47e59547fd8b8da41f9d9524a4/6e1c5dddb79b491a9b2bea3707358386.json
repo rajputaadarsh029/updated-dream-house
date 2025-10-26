@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "id": "6e1c5dddb79b491a9b2bea3707358386",
+    "created": "2025-09-28T07:32:04.975175",
+    "name": "4bhk"
+  },
+  "project": {
+    "id": "7ee19a47e59547fd8b8da41f9d9524a4",
+    "name": "4bhk",
+    "layout": {
+      "rooms": [
+        {
+          "name": "Living Room",
+          "size": 5,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "name": "Kitchen",
+          "size": 3.5,
+          "x": 5.5,
+          "y": 0
+        },
+        {
+          "name": "Bedroom 1",
+          "size": 3.5,
+          "x": 0,
+          "y": 4
+        },
+        {
+          "name": "Bathroom 1",
+          "size": 2,
+          "x": 4,
+          "y": 4
+        },
+        {
+          "name": "Bedroom 2",
+          "size": 3.5,
+          "x": 0,
+          "y": 8
+        },
+        {
+          "name": "Bathroom 2",
+          "size": 2,
+          "x": 4,
+          "y": 8
+        },
+        {
+          "name": "Bedroom 3",
+          "size": 3.5,
+          "x": 0,
+          "y": 12
+        },
+        {
+          "name": "Bathroom 3",
+          "size": 2,
+          "x": 4,
+          "y": 12
+        },
+        {
+          "name": "Bedroom 4",
+          "size": 3.5,
+          "x": 0,
+          "y": 16
+        },
+        {
+          "name": "Bathroom 4",
+          "size": 2,
+          "x": 4,
+          "y": 16
+        }
+      ],
+      "meta": {
+        "description": "4bhk",
+        "mood": "cozy",
+        "bedrooms": 4
+      }
+    },
+    "owner": "avinash"
+  }
+}

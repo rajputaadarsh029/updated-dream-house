@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "id": "af3f5bbe8d9a45c9b5f6991147c7196e",
+    "created": "2025-09-24T09:39:37.730768",
+    "name": "rrrrr"
+  },
+  "project": {
+    "id": "f3beaaa6566f4cfcafd23e9df81bd860",
+    "name": "rrrrr",
+    "layout": {
+      "rooms": [
+        {
+          "name": "Living Room",
+          "size": 5,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "name": "Kitchen",
+          "size": 3.5,
+          "x": 5.5,
+          "y": 0
+        },
+        {
+          "name": "Bedroom 1",
+          "size": 3.5,
+          "x": 0,
+          "y": 4
+        },
+        {
+          "name": "Bathroom 1",
+          "size": 2,
+          "x": 4,
+          "y": 4
+        },
+        {
+          "name": "Bedroom 2",
+          "size": 3.5,
+          "x": 0,
+          "y": 8
+        },
+        {
+          "name": "Bathroom 2",
+          "size": 2,
+          "x": 4,
+          "y": 8
+        },
+        {
+          "name": "Bedroom 3",
+          "size": 3.5,
+          "x": 0,
+          "y": 12
+        },
+        {
+          "name": "Bathroom 3",
+          "size": 2,
+          "x": 4,
+          "y": 12
+        },
+        {
+          "name": "Bedroom 4",
+          "size": 3.5,
+          "x": 0,
+          "y": 16
+        },
+        {
+          "name": "Bathroom 4",
+          "size": 2,
+          "x": 4,
+          "y": 16
+        },
+        {
+          "name": "Bedroom 5",
+          "size": 3.5,
+          "x": 0,
+          "y": 20
+        },
+        {
+          "name": "Bathroom 5",
+          "size": 6,
+          "x": 4,
+          "y": 20
+        },
+        {
+          "name": "Bedroom 6",
+          "size": 3.5,
+          "x": 0,
+          "y": 24
+        },
+        {
+          "name": "Bathroom 6",
+          "size": 2,
+          "x": 4,
+          "y": 24
+        },
+        {
+          "name": "Bedroom 7",
+          "size": 3.5,
+          "x": 0,
+          "y": 28
+        },
+        {
+          "name": "Bathroom 7",
+          "size": 2,
+          "x": 4,
+          "y": 28
+        }
+      ],
+      "meta": {
+        "description": "rrrrr",
+        "mood": "raw",
+        "bedrooms": 7
+      }
+    },
+    "owner": "avinash"
+  }
+}

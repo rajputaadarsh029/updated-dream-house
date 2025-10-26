@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "id": "0ac1d0bce98e4721951f8dc5839fdb54",
+    "created": "2025-09-18T15:58:31.191790",
+    "name": "duplex"
+  },
+  "project": {
+    "id": "73111702b52a4f6dbed9c3ea6b479b0e",
+    "name": "duplex",
+    "layout": {
+      "rooms": [
+        {
+          "name": "Living Room",
+          "size": 5,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "name": "Kitchen",
+          "size": 3.5,
+          "x": 5.5,
+          "y": 0
+        },
+        {
+          "name": "Bedroom 1",
+          "size": 3.5,
+          "x": 0,
+          "y": 4
+        },
+        {
+          "name": "Bathroom 1",
+          "size": 2,
+          "x": 4,
+          "y": 4
+        },
+        {
+          "name": "Bedroom 2",
+          "size": 3.5,
+          "x": 0,
+          "y": 8
+        },
+        {
+          "name": "Bathroom 2",
+          "size": 2,
+          "x": 4,
+          "y": 8
+        },
+        {
+          "name": "Bedroom 3",
+          "size": 3.5,
+          "x": 0,
+          "y": 12,
+          "rotationY": 0,
+          "scale": 1
+        },
+        {
+          "name": "Bathroom 3",
+          "size": 2,
+          "x": 4,
+          "y": 12
+        },
+        {
+          "name": "Bedroom 4",
+          "size": 3.5,
+          "x": 0,
+          "y": 16
+        },
+        {
+          "name": "Bathroom 4",
+          "size": 2,
+          "x": 4,
+          "y": 16
+        },
+        {
+          "name": "Bedroom 5",
+          "size": 3.5,
+          "x": 0,
+          "y": 20
+        },
+        {
+          "name": "Bathroom 5",
+          "size": 2,
+          "x": 4,
+          "y": 20
+        }
+      ],
+      "meta": {
+        "description": "duplex",
+        "mood": "cozy",
+        "bedrooms": 5
+      }
+    },
+    "owner": "aadarsh"
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "seed-1",
+    "name": "Modern 2BHK",
+    "layout": {
+      "rooms": [
+        {"name": "Living Room", "size": 5, "x":0, "y":0},
+        {"name": "Kitchen", "size": 3.5, "x":5, "y":0},
+        {"name": "Bedroom 1", "size": 3.5, "x":0, "y":4}
+      ],
+      "meta":{"mood":"modern"}
+    }
+  }
+]

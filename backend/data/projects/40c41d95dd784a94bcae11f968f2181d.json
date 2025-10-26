@@ -1,0 +1,17 @@
+{
+  "id": "40c41d95dd784a94bcae11f968f2181d",
+  "name": "Test save",
+  "layout": {
+    "rooms": [
+      {
+        "name": "Living Room",
+        "size": 5.0,
+        "x": 0.0,
+        "y": 0.0
+      }
+    ],
+    "meta": {
+      "mood": "eco"
+    }
+  }
+}
