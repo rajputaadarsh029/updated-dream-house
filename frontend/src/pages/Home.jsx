@@ -27,6 +27,7 @@ export default function Home() {
   // Rotation state ref to access latest from any closure
   const rotationTimerRef = useRef(null);
   const currentIndexRef = useRef(0);
+  const [activeSection, setActiveSection] = useState(0);
 
   // helper to set a source on a video element and return a promise when loaded
   const setVideoSource = (vidEl, src) => {
@@ -253,9 +254,58 @@ export default function Home() {
   // side dots scroll handler
   const handleDotClick = (idx) => {
     if (typeof window === 'undefined') return;
-    const y = Math.round(idx * window.innerHeight);
-    window.scrollTo({ top: y, behavior: 'smooth' });
+    const ids = ['hero-section', 'interior', 'exterior', 'culture'];
+    const id = ids[idx] || ids[0];
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // fallback: scroll by viewport multiples
+      const y = Math.round(idx * window.innerHeight);
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
   };
+
+  // Scrollspy: update active side-dot while scrolling
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const ids = ['hero-section', 'interior', 'exterior', 'culture'];
+    const getEls = () => ids.map(id => document.getElementById(id));
+
+    let els = getEls();
+
+    const onScroll = () => {
+      const center = window.innerHeight / 2;
+      let bestIdx = 0;
+      let bestDist = Infinity;
+      els.forEach((el, i) => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const elCenter = rect.top + rect.height / 2;
+        const dist = Math.abs(elCenter - center);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIdx = i;
+        }
+      });
+      setActiveSection(bestIdx);
+    };
+
+    // initial run
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+
+    // If content changes, refresh list (basic observer)
+    const mo = new MutationObserver(() => { els = getEls(); });
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      mo.disconnect();
+    };
+  }, []);
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
@@ -292,7 +342,7 @@ export default function Home() {
         <button onClick={() => alert('Day17 • Projects & Dashboard\n\nHelp: Use the buttons to manage your projects.')} className="btn-soft">Help</button>
       </div>
 
-  <div className="hero-bg" ref={heroRef}>
+  <div id="hero-section" className="hero-bg" ref={heroRef}>
         {/* Top nav - minimal */}
         <header className="top-nav" aria-hidden="false">
           <div className="logo">DreamHouse</div>
@@ -362,13 +412,85 @@ export default function Home() {
         </div>
 
         {/* Right side dot navigation */}
-        <div className="side-dots" aria-hidden="true">
-          <button className="active" aria-label="section 1" onClick={() => handleDotClick(0)}></button>
-          <button aria-label="section 2" onClick={() => handleDotClick(1)}></button>
-          <button aria-label="section 3" onClick={() => handleDotClick(2)}></button>
-          <button aria-label="section 4" onClick={() => handleDotClick(3)}></button>
+        <div className="side-dots" aria-hidden="false">
+          <button className={activeSection === 0 ? 'active' : ''} aria-label="Top / Hero" onClick={() => handleDotClick(0)}></button>
+          <button className={activeSection === 1 ? 'active' : ''} aria-label="Interior" onClick={() => handleDotClick(1)}></button>
+          <button className={activeSection === 2 ? 'active' : ''} aria-label="Exterior" onClick={() => handleDotClick(2)}></button>
+          <button className={activeSection === 3 ? 'active' : ''} aria-label="Culture" onClick={() => handleDotClick(3)}></button>
         </div>
       </div>
+      {/* Additional full-screen sections for scroll navigation */}
+      <section id="interior" className="card" style={{ minHeight: '100vh', padding: 48 }}>
+        <h2 style={{ fontSize: 28, marginBottom: 12 }}>Interior</h2>
+        <p className="muted">Explore interior layouts, materials, and finishes. Scroll to see the active dot change.</p>
+        <div style={{ marginTop: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: 16 }}>
+            <article className="card" style={{ padding: 12 }}>
+              <img src="/assets/interior1.svg" alt="Interior A" style={{ width: '100%', borderRadius: 8 }} />
+              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Cozy Living Room</h3>
+              <div className="small-muted">Feb 12, 2025</div>
+            </article>
+            <article className="card" style={{ padding: 12 }}>
+              <img src="/assets/interior1.svg" alt="Interior B" style={{ width: '100%', borderRadius: 8, filter: 'saturate(0.95)' }} />
+              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Kitchen Concept</h3>
+              <div className="small-muted">Jan 28, 2025</div>
+            </article>
+            <article className="card" style={{ padding: 12 }}>
+              <img src="/assets/interior1.svg" alt="Interior C" style={{ width: '100%', borderRadius: 8, opacity: 0.95 }} />
+              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Bedroom Suite</h3>
+              <div className="small-muted">Dec 10, 2024</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="exterior" className="card" style={{ minHeight: '100vh', padding: 48 }}>
+        <h2 style={{ fontSize: 28, marginBottom: 12 }}>Exterior</h2>
+        <p className="muted">Exterior studies, facades, and landscape interactions.</p>
+        <div style={{ marginTop: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: 16 }}>
+            <article className="card" style={{ padding: 12 }}>
+              <img src="/assets/exterior1.svg" alt="Exterior A" style={{ width: '100%', borderRadius: 8 }} />
+              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Facade Proposal</h3>
+              <div className="small-muted">Mar 03, 2025</div>
+            </article>
+            <article className="card" style={{ padding: 12 }}>
+              <img src="/assets/exterior1.svg" alt="Exterior B" style={{ width: '100%', borderRadius: 8 }} />
+              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Landscape Integration</h3>
+              <div className="small-muted">Feb 14, 2025</div>
+            </article>
+            <article className="card" style={{ padding: 12 }}>
+              <img src="/assets/exterior1.svg" alt="Exterior C" style={{ width: '100%', borderRadius: 8 }} />
+              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Night Rendering</h3>
+              <div className="small-muted">Nov 21, 2024</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="culture" className="card" style={{ minHeight: '100vh', padding: 48 }}>
+        <h2 style={{ fontSize: 28, marginBottom: 12 }}>Culture</h2>
+        <p className="muted">Research, culture, and community insights.</p>
+        <div style={{ marginTop: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: 16 }}>
+            <article className="card" style={{ padding: 12 }}>
+              <img src="/assets/culture1.svg" alt="Culture A" style={{ width: '100%', borderRadius: 8 }} />
+              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Community Workshop</h3>
+              <div className="small-muted">Apr 02, 2025</div>
+            </article>
+            <article className="card" style={{ padding: 12 }}>
+              <img src="/assets/culture1.svg" alt="Culture B" style={{ width: '100%', borderRadius: 8 }} />
+              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Research Note</h3>
+              <div className="small-muted">Jan 11, 2025</div>
+            </article>
+            <article className="card" style={{ padding: 12 }}>
+              <img src="/assets/culture1.svg" alt="Culture C" style={{ width: '100%', borderRadius: 8 }} />
+              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Public Installation</h3>
+              <div className="small-muted">Oct 15, 2024</div>
+            </article>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

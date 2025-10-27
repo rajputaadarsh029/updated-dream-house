@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="100%" height="100%" fill="#fff8f2"/>
+  <g fill="#f7d9c7">
+    <circle cx="140" cy="220" r="80"/>
+    <rect x="260" y="180" width="380" height="160" rx="12"/>
+  </g>
+  <g fill="#6b3e26">
+    <rect x="300" y="220" width="120" height="80" rx="8"/>
+    <rect x="440" y="220" width="120" height="80" rx="8"/>
+  </g>
+  <text x="48" y="48" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#54301f">Culture Piece</text>
+</svg>
