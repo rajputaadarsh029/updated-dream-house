@@ -10,6 +10,27 @@ export default function Home() {
   const heroRef = useRef(null);
   const videoRefA = useRef(null);
   const videoRefB = useRef(null);
+  const sectionVideoRefs = useRef({});
+  // sample data for sections
+  const sampleData = {
+    interior: [
+      { id: 'int-1', title: 'Cozy Living Room', date: 'Feb 12, 2025', img: '/assets/interior1.svg', desc: 'A warm living room concept focusing on natural materials and daylight.' },
+      { id: 'int-2', title: 'Kitchen Concept', date: 'Jan 28, 2025', img: '/assets/interior1.svg', desc: 'Open-plan kitchen with integrated storage and island.' },
+      { id: 'int-3', title: 'Bedroom Suite', date: 'Dec 10, 2024', img: '/assets/interior1.svg', desc: 'Minimal bedroom suite with soft textiles and ambient lighting.' }
+    ],
+    exterior: [
+      { id: 'ext-1', title: 'Facade Proposal', date: 'Mar 03, 2025', img: '/assets/exterior1.svg', desc: 'A ventilated facade strategy using layered materials.' },
+      { id: 'ext-2', title: 'Landscape Integration', date: 'Feb 14, 2025', img: '/assets/exterior1.svg', desc: 'Terraced planting and rainwater strategies for the site.' },
+      { id: 'ext-3', title: 'Night Rendering', date: 'Nov 21, 2024', img: '/assets/exterior1.svg', desc: 'Night-time lighting proposal showing warmth and depth.' }
+    ],
+    culture: [
+      { id: 'cul-1', title: 'Community Workshop', date: 'Apr 02, 2025', img: '/assets/culture1.svg', desc: 'Participatory design workshop notes and diagrams.' },
+      { id: 'cul-2', title: 'Research Note', date: 'Jan 11, 2025', img: '/assets/culture1.svg', desc: 'Research findings on local materials and crafts.' },
+      { id: 'cul-3', title: 'Public Installation', date: 'Oct 15, 2024', img: '/assets/culture1.svg', desc: 'Proposal for a temporary public installation.' }
+    ]
+  };
+
+  const [selectedItem, setSelectedItem] = useState(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeLayer, setActiveLayer] = useState(0); // 0 = A visible, 1 = B visible
@@ -216,6 +237,117 @@ export default function Home() {
     };
   }, [videoLoaded, prefersReducedMotion]);
 
+  // Play/pause section background videos depending on which section is active
+  useEffect(() => {
+    // mapping of section idx to ids used earlier: 0=hero (we keep hero videos), 1=interior, 2=exterior, 3=culture
+    const map = {
+      1: 'interior',
+      2: 'exterior',
+      3: 'culture'
+    };
+
+    // pause all section videos first
+    Object.values(sectionVideoRefs.current).forEach((v) => {
+      try { if (v && !v.paused) v.pause(); } catch (e) { /* ignore */ }
+    });
+
+    const id = map[activeSection];
+    if (id) {
+      const vid = sectionVideoRefs.current[id];
+      if (vid) {
+        // try play (muted automatically to allow autoplay)
+        vid.currentTime = 0;
+        vid.play().catch(() => { /* autoplay blocked or missing file */ });
+      }
+    }
+  }, [activeSection]);
+
+  // Generate small placeholder WebM videos at runtime (canvas -> MediaRecorder)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.MediaRecorder || !window.OffscreenCanvas && !document.createElement) return;
+
+    const createDemoVideo = async (w = 640, h = 360, colors = ['#8b5e45', '#f7d9c7'], duration = 2000) => {
+      return new Promise((resolve) => {
+        // create a canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+
+        const stream = canvas.captureStream(30);
+        const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+        const chunks = [];
+        recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          resolve(url);
+        };
+
+        // simple animated gradient
+        let start = null;
+        const draw = (t) => {
+          if (!start) start = t;
+          const p = ((t - start) % 2000) / 2000;
+          // interpolate colors
+          const c1 = colors[0];
+          const c2 = colors[1];
+          const grad = ctx.createLinearGradient(0, 0, w, h);
+          grad.addColorStop(0, c1);
+          grad.addColorStop(1, c2);
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, w, h);
+          // moving shapes
+          ctx.fillStyle = 'rgba(255,255,255,0.08)';
+          const x = Math.sin((t - start) / 600) * (w * 0.06);
+          ctx.beginPath();
+          ctx.ellipse(w * 0.2 + x, h * 0.35, w * 0.16, h * 0.12, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(w * 0.75 - x, h * 0.6, w * 0.22, h * 0.16, 0, 0, Math.PI * 2);
+          ctx.fill();
+          if (!recorder.state || recorder.state === 'recording') requestAnimationFrame(draw);
+        };
+
+        recorder.start();
+        requestAnimationFrame(draw);
+        setTimeout(() => {
+          try { recorder.stop(); } catch (e) { resolve(null); }
+        }, duration + 60);
+      });
+    };
+
+    // generate for each section if not already present
+    const genAll = async () => {
+      const map = {
+        interior: ['#8b5e45', '#f7d9c7'],
+        exterior: ['#6b3e26', '#eef2f3'],
+        culture: ['#f7d9c7', '#fff8f2']
+      };
+      for (const key of Object.keys(map)) {
+        const el = sectionVideoRefs.current[key];
+        if (!el) continue;
+        // if video has no src (or only poster), generate a runtime webm
+        const hasSource = el.currentSrc || (el.querySelector && el.querySelector('source') && el.querySelector('source').src);
+        if (!hasSource) {
+          try {
+            const url = await createDemoVideo(960, 540, map[key], 2000);
+            if (url) {
+              // assign blob url directly to video
+              el.src = url;
+              el.load();
+            }
+          } catch (e) {
+            // ignore generation errors
+            console.warn('Demo video generation failed', e);
+          }
+        }
+      }
+    };
+
+    genAll();
+  }, []);
+
   // play/pause toggle with rotation handling
   const togglePlay = async () => {
     const a = videoRefA.current;
@@ -305,6 +437,15 @@ export default function Home() {
       window.removeEventListener('resize', onScroll);
       mo.disconnect();
     };
+  }, []);
+
+  // modal close on ESC
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') setSelectedItem(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   return (
@@ -420,74 +561,89 @@ export default function Home() {
         </div>
       </div>
       {/* Additional full-screen sections for scroll navigation */}
-      <section id="interior" className="card" style={{ minHeight: '100vh', padding: 48 }}>
+      <section id="interior" className="card" style={{ minHeight: '100vh', padding: 48, position: 'relative', overflow: 'hidden' }}>
+        <video
+          ref={(el) => (sectionVideoRefs.current['interior'] = el)}
+          className="section-video"
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/assets/interior1.svg"
+          aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none', filter: 'brightness(0.6) saturate(0.9)' }}
+        >
+          <source src="/assets/interior.mp4" type="video/mp4" />
+        </video>
         <h2 style={{ fontSize: 28, marginBottom: 12 }}>Interior</h2>
         <p className="muted">Explore interior layouts, materials, and finishes. Scroll to see the active dot change.</p>
-        <div style={{ marginTop: 24 }}>
+        <div style={{ marginTop: 24, position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: 16 }}>
-            <article className="card" style={{ padding: 12 }}>
-              <img src="/assets/interior1.svg" alt="Interior A" style={{ width: '100%', borderRadius: 8 }} />
-              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Cozy Living Room</h3>
-              <div className="small-muted">Feb 12, 2025</div>
-            </article>
-            <article className="card" style={{ padding: 12 }}>
-              <img src="/assets/interior1.svg" alt="Interior B" style={{ width: '100%', borderRadius: 8, filter: 'saturate(0.95)' }} />
-              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Kitchen Concept</h3>
-              <div className="small-muted">Jan 28, 2025</div>
-            </article>
-            <article className="card" style={{ padding: 12 }}>
-              <img src="/assets/interior1.svg" alt="Interior C" style={{ width: '100%', borderRadius: 8, opacity: 0.95 }} />
-              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Bedroom Suite</h3>
-              <div className="small-muted">Dec 10, 2024</div>
-            </article>
+            {sampleData.interior.map(item => (
+              <article key={item.id} className="card" style={{ padding: 12, cursor: 'pointer' }} onClick={() => setSelectedItem({ ...item, section: 'interior' })}>
+                <img src={item.img} alt={item.title} style={{ width: '100%', borderRadius: 8 }} />
+                <h3 style={{ marginTop: 10, marginBottom: 4 }}>{item.title}</h3>
+                <div className="small-muted">{item.date}</div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section id="exterior" className="card" style={{ minHeight: '100vh', padding: 48 }}>
+      <section id="exterior" className="card" style={{ minHeight: '100vh', padding: 48, position: 'relative', overflow: 'hidden' }}>
+        <video
+          ref={(el) => (sectionVideoRefs.current['exterior'] = el)}
+          className="section-video"
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/assets/exterior1.svg"
+          aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none', filter: 'brightness(0.6) saturate(0.9)' }}
+        >
+          <source src="/assets/exterior.mp4" type="video/mp4" />
+        </video>
         <h2 style={{ fontSize: 28, marginBottom: 12 }}>Exterior</h2>
         <p className="muted">Exterior studies, facades, and landscape interactions.</p>
-        <div style={{ marginTop: 24 }}>
+        <div style={{ marginTop: 24, position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: 16 }}>
-            <article className="card" style={{ padding: 12 }}>
-              <img src="/assets/exterior1.svg" alt="Exterior A" style={{ width: '100%', borderRadius: 8 }} />
-              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Facade Proposal</h3>
-              <div className="small-muted">Mar 03, 2025</div>
-            </article>
-            <article className="card" style={{ padding: 12 }}>
-              <img src="/assets/exterior1.svg" alt="Exterior B" style={{ width: '100%', borderRadius: 8 }} />
-              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Landscape Integration</h3>
-              <div className="small-muted">Feb 14, 2025</div>
-            </article>
-            <article className="card" style={{ padding: 12 }}>
-              <img src="/assets/exterior1.svg" alt="Exterior C" style={{ width: '100%', borderRadius: 8 }} />
-              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Night Rendering</h3>
-              <div className="small-muted">Nov 21, 2024</div>
-            </article>
+            {sampleData.exterior.map(item => (
+              <article key={item.id} className="card" style={{ padding: 12, cursor: 'pointer' }} onClick={() => setSelectedItem({ ...item, section: 'exterior' })}>
+                <img src={item.img} alt={item.title} style={{ width: '100%', borderRadius: 8 }} />
+                <h3 style={{ marginTop: 10, marginBottom: 4 }}>{item.title}</h3>
+                <div className="small-muted">{item.date}</div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section id="culture" className="card" style={{ minHeight: '100vh', padding: 48 }}>
+      <section id="culture" className="card" style={{ minHeight: '100vh', padding: 48, position: 'relative', overflow: 'hidden' }}>
+        <video
+          ref={(el) => (sectionVideoRefs.current['culture'] = el)}
+          className="section-video"
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/assets/culture1.svg"
+          aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, pointerEvents: 'none', filter: 'brightness(0.6) saturate(0.9)' }}
+        >
+          <source src="/assets/culture.mp4" type="video/mp4" />
+        </video>
         <h2 style={{ fontSize: 28, marginBottom: 12 }}>Culture</h2>
         <p className="muted">Research, culture, and community insights.</p>
-        <div style={{ marginTop: 24 }}>
+        <div style={{ marginTop: 24, position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: 16 }}>
-            <article className="card" style={{ padding: 12 }}>
-              <img src="/assets/culture1.svg" alt="Culture A" style={{ width: '100%', borderRadius: 8 }} />
-              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Community Workshop</h3>
-              <div className="small-muted">Apr 02, 2025</div>
-            </article>
-            <article className="card" style={{ padding: 12 }}>
-              <img src="/assets/culture1.svg" alt="Culture B" style={{ width: '100%', borderRadius: 8 }} />
-              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Research Note</h3>
-              <div className="small-muted">Jan 11, 2025</div>
-            </article>
-            <article className="card" style={{ padding: 12 }}>
-              <img src="/assets/culture1.svg" alt="Culture C" style={{ width: '100%', borderRadius: 8 }} />
-              <h3 style={{ marginTop: 10, marginBottom: 4 }}>Public Installation</h3>
-              <div className="small-muted">Oct 15, 2024</div>
-            </article>
+            {sampleData.culture.map(item => (
+              <article key={item.id} className="card" style={{ padding: 12, cursor: 'pointer' }} onClick={() => setSelectedItem({ ...item, section: 'culture' })}>
+                <img src={item.img} alt={item.title} style={{ width: '100%', borderRadius: 8 }} />
+                <h3 style={{ marginTop: 10, marginBottom: 4 }}>{item.title}</h3>
+                <div className="small-muted">{item.date}</div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
