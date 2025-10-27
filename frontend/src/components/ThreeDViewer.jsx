@@ -1,5 +1,5 @@
 // src/components/ThreeDViewer.jsx
-import React, { useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useRef, useEffect, useImperativeHandle, forwardRef, Suspense } from "react";
 import { useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Canvas, useThree } from "@react-three/fiber";
@@ -15,10 +15,66 @@ import * as THREE from "three";
  *  - onTransformEnd(name, { x, y, rotationY, scale })
  *  - mode: "translate" | "rotate" | "scale"
  *  - snap: number (optional) - grid snap size in same units as x,y
- *
- * Exposes:
- *  - capture(): returns dataURL PNG of canvas via ref
  */
+
+  // Demo exterior: simple house + trees
+  const DemoExteriorScene = () => {
+    return (
+      <>
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[5, 10, 7]} intensity={0.9} />
+        {/* ground */}
+        <mesh rotation={[-Math.PI/2, 0, 0]} receiveShadow>
+          <planeGeometry args={[200, 200]} />
+          <meshStandardMaterial color={'#7fbf7f'} />
+        </mesh>
+
+        {/* simple house */}
+        <group position={[0, 0.75, 0]}> 
+          <mesh position={[0, 0.35, 0]}> <boxGeometry args={[3, 0.6, 3]} /> <meshStandardMaterial color={'#efe1d6'} /> </mesh>
+          <mesh position={[0, 1.05, 0]}> <coneGeometry args={[1.8, 1.2, 4]} /> <meshStandardMaterial color={'#b55a3c'} /></mesh>
+          <mesh position={[0, 0.18, 1.55]}> <boxGeometry args={[0.8, 0.5, 0.02]} /> <meshStandardMaterial color={'#333'} /></mesh>
+        </group>
+
+        {/* trees */}
+        {[-6, -3, 4, 7].map((x, i) => (
+          <group key={i} position={[x, 0, -6 + i * 3]}>
+            <mesh position={[0, 1.5, 0]}> <cylinderGeometry args={[0, 1, 3, 8]} /> <meshStandardMaterial color={'#2e7d32'} /></mesh>
+            <mesh position={[0, 0.35, 0]}> <cylinderGeometry args={[0.12, 0.12, 0.6, 8]} /> <meshStandardMaterial color={'#6b4a2a'} /></mesh>
+          </group>
+        ))}
+      </>
+    );
+  };
+
+  // Demo culture: plaza with benches and a simple sculpture
+  const DemoCultureScene = () => {
+    return (
+      <>
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[5, 10, 7]} intensity={0.8} />
+        <mesh rotation={[-Math.PI/2, 0, 0]} position={[0,0,0]}> <planeGeometry args={[200,200]} /> <meshStandardMaterial color={'#dcdcdc'} /></mesh>
+
+        {/* plaza tiles */}
+        {Array.from({ length: 6 }).map((_, i) => (
+          Array.from({ length: 6 }).map((__, j) => (
+            <mesh key={`${i}-${j}`} position={[i - 3, 0.01, j - 3]}> <boxGeometry args={[0.9, 0.02, 0.9]} /> <meshStandardMaterial color={(i + j) % 2 ? '#e8e8e8' : '#cfcfcf'} /></mesh>
+          ))
+        ))}
+
+        {/* benches */}
+        {[-2, 2].map((x, idx) => (
+          <group key={idx} position={[x, 0.2, -1.5]}>
+            <mesh position={[0, 0.15, 0]}> <boxGeometry args={[1.2, 0.1, 0.3]} /> <meshStandardMaterial color={'#6b4a2a'} /></mesh>
+            <mesh position={[0, 0.45, -0.25]}> <boxGeometry args={[1.2, 0.02, 0.4]} /> <meshStandardMaterial color={'#bfbfbf'} /></mesh>
+          </group>
+        ))}
+
+        {/* sculpture */}
+        <mesh position={[0, 0.8, 0]}> <torusKnotGeometry args={[0.4, 0.12, 64, 8]} /> <meshStandardMaterial color={'#8b5e45'} /></mesh>
+      </>
+    );
+  };
 
 const SceneInner = forwardRef(({ layout, selectedRoomName, onSelectRoom, onTransformEnd, mode = "translate", snap = 0, renderMode = "furnished" }, ref) => {
   // --- glTF model support (additive, does not replace procedural) ---
@@ -295,7 +351,7 @@ const SceneInner = forwardRef(({ layout, selectedRoomName, onSelectRoom, onTrans
 
 import { useState } from "react";
 
-const ThreeDViewer = forwardRef(({ layout = { rooms: [] }, selectedRoomName, onSelectRoom, onTransformEnd, mode = "translate", snap = 0 }, ref) => {
+const ThreeDViewer = forwardRef(({ layout = { rooms: [] }, modelPath = null, selectedRoomName, onSelectRoom, onTransformEnd, mode = "translate", snap = 0 }, ref) => {
   const innerRef = useRef();
   const [renderMode, setRenderMode] = useState('furnished');
 
@@ -306,7 +362,54 @@ const ThreeDViewer = forwardRef(({ layout = { rooms: [] }, selectedRoomName, onS
       return innerRef.current.capture();
     },
   }));
+  // If a GLTF model path was provided, render that model in a focused viewer
+  const isGLTF = typeof modelPath === 'string' && (modelPath.toLowerCase().endsWith('.glb') || modelPath.toLowerCase().endsWith('.gltf'));
 
+  // small component to load and render a single glTF model
+  const GLTFModel = ({ url }) => {
+    const gltf = useLoader(GLTFLoader, url);
+    const refGroup = useRef();
+
+    useEffect(() => {
+      if (!gltf || !gltf.scene) return;
+      // center & scale
+      const box = new THREE.Box3().setFromObject(gltf.scene);
+      const center = box.getCenter(new THREE.Vector3());
+      gltf.scene.position.sub(center);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const scale = 4 / maxDim;
+      gltf.scene.scale.multiplyScalar(scale);
+    }, [gltf]);
+
+    return <primitive object={gltf.scene} ref={refGroup} />;
+  };
+
+  // demo layout used when modelPath starts with 'demo' or no modelPath provided
+  const demoLayout = {
+    rooms: [
+      { name: 'Living Room', size: 4, x: 0, y: 0 },
+      { name: 'Bedroom', size: 3, x: 5, y: 0 },
+      { name: 'Kitchen', size: 3, x: 0, y: 5 }
+    ]
+  };
+
+  if (isGLTF) {
+    return (
+      <div style={{ width: "100%", height: "70vh", borderRadius: 8, overflow: "hidden", background: "#000", position: 'relative' }}>
+        <Canvas shadows camera={{ position: [0, 1.6, 4], fov: 45 }}>
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[5, 10, 7]} intensity={0.8} />
+          <Suspense fallback={null}>
+            <GLTFModel url={modelPath} />
+          </Suspense>
+          <OrbitControls enablePan enableZoom enableRotate />
+        </Canvas>
+      </div>
+    );
+  }
+
+  // fallback: show the R3F scene inner (demo procedural rooms)
   return (
     <div style={{ width: "100%", height: "520px", borderRadius: 8, overflow: "hidden", background: "#111", position: 'relative' }}>
       {/* Toggle button for schematic/furnished */}
@@ -326,7 +429,13 @@ const ThreeDViewer = forwardRef(({ layout = { rooms: [] }, selectedRoomName, onS
         </button>
       </div>
       <Canvas shadows camera={{ position: [10, 12, 10], fov: 50 }}>
-        <SceneInner ref={innerRef} layout={layout} selectedRoomName={selectedRoomName} onSelectRoom={onSelectRoom} onTransformEnd={onTransformEnd} mode={mode} snap={snap} renderMode={renderMode} />
+        {typeof modelPath === 'string' && modelPath.startsWith('demo-exterior') ? (
+          <DemoExteriorScene />
+        ) : typeof modelPath === 'string' && modelPath.startsWith('demo-culture') ? (
+          <DemoCultureScene />
+        ) : (
+          <SceneInner ref={innerRef} layout={(typeof modelPath === 'string' && modelPath.startsWith('demo')) ? demoLayout : layout} selectedRoomName={selectedRoomName} onSelectRoom={onSelectRoom} onTransformEnd={onTransformEnd} mode={mode} snap={snap} renderMode={renderMode} />
+        )}
       </Canvas>
     </div>
   );

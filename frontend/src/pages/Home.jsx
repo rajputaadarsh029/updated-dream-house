@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import ThreeDViewer from '../components/ThreeDViewer';
 
 export default function Home() {
   const navigate = typeof window !== 'undefined' ? useNavigate() : null;
@@ -14,19 +15,19 @@ export default function Home() {
   // sample data for sections
   const sampleData = {
     interior: [
-      { id: 'int-1', title: 'Cozy Living Room', date: 'Feb 12, 2025', img: '/assets/interior1.svg', desc: 'A warm living room concept focusing on natural materials and daylight.' },
-      { id: 'int-2', title: 'Kitchen Concept', date: 'Jan 28, 2025', img: '/assets/interior1.svg', desc: 'Open-plan kitchen with integrated storage and island.' },
-      { id: 'int-3', title: 'Bedroom Suite', date: 'Dec 10, 2024', img: '/assets/interior1.svg', desc: 'Minimal bedroom suite with soft textiles and ambient lighting.' }
+      { id: 'int-1', title: 'Modern Living Room', date: 'Feb 12, 2025', img: 'https://images.unsplash.com/photo-1618219944342-824e40a13285', desc: 'A bright and airy living room with contemporary furniture and large windows for natural light.' },
+      { id: 'int-2', title: 'Luxury Kitchen', date: 'Jan 28, 2025', img: 'https://images.unsplash.com/photo-1556911220-bff31c812dba', desc: 'Elegant kitchen design with marble countertops, modern appliances, and custom cabinetry.' },
+      { id: 'int-3', title: 'Master Suite', date: 'Dec 10, 2024', img: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af', desc: 'Serene master bedroom featuring neutral tones, custom lighting, and panoramic views.' }
     ],
     exterior: [
-      { id: 'ext-1', title: 'Facade Proposal', date: 'Mar 03, 2025', img: '/assets/exterior1.svg', desc: 'A ventilated facade strategy using layered materials.' },
-      { id: 'ext-2', title: 'Landscape Integration', date: 'Feb 14, 2025', img: '/assets/exterior1.svg', desc: 'Terraced planting and rainwater strategies for the site.' },
-      { id: 'ext-3', title: 'Night Rendering', date: 'Nov 21, 2024', img: '/assets/exterior1.svg', desc: 'Night-time lighting proposal showing warmth and depth.' }
+      { id: 'ext-1', title: 'Modern Facade', date: 'Mar 03, 2025', img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c', desc: 'Contemporary home exterior with clean lines, large windows, and sustainable materials.' },
+      { id: 'ext-2', title: 'Garden Design', date: 'Feb 14, 2025', img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6', desc: 'Sustainable landscape design integrating native plants and water-efficient features.' },
+      { id: 'ext-3', title: 'Evening View', date: 'Nov 21, 2024', img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750', desc: 'Stunning dusk view showcasing architectural lighting and indoor-outdoor connection.' }
     ],
     culture: [
-      { id: 'cul-1', title: 'Community Workshop', date: 'Apr 02, 2025', img: '/assets/culture1.svg', desc: 'Participatory design workshop notes and diagrams.' },
-      { id: 'cul-2', title: 'Research Note', date: 'Jan 11, 2025', img: '/assets/culture1.svg', desc: 'Research findings on local materials and crafts.' },
-      { id: 'cul-3', title: 'Public Installation', date: 'Oct 15, 2024', img: '/assets/culture1.svg', desc: 'Proposal for a temporary public installation.' }
+      { id: 'cul-1', title: 'Community Design Hub', date: 'Apr 02, 2025', img: 'https://images.unsplash.com/photo-1517502884422-41eaead166d4', desc: 'Our innovative community workspace where architects and residents collaborate on sustainable solutions.' },
+      { id: 'cul-2', title: 'Local Craftsmanship', date: 'Jan 11, 2025', img: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e', desc: 'Integrating traditional craftsmanship with modern architectural techniques.' },
+      { id: 'cul-3', title: 'Urban Integration', date: 'Oct 15, 2024', img: 'https://images.unsplash.com/photo-1519999482648-25049ddd37b1', desc: 'Exploring how architecture can enhance community connections and urban life.' }
     ]
   };
 
@@ -448,8 +449,251 @@ export default function Home() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // State for 3D viewer
+  const [show3DViewer, setShow3DViewer] = useState(false);
+  const [activeModel, setActiveModel] = useState(null);
+
+  // Small reusable slideshow component (crossfade) for section highlights
+  function Slideshow({ images = [], interval = 3000, height = 320 }) {
+    const [frontIdx, setFrontIdx] = useState(0);
+    const [backIdx, setBackIdx] = useState(images && images.length ? images.length - 1 : 0);
+    const [showFront, setShowFront] = useState(true);
+    const timerRef = useRef(null);
+
+    useEffect(() => {
+      if (!images || images.length <= 1) return;
+
+      timerRef.current = setInterval(() => {
+        setFrontIdx((prev) => {
+          const next = (prev + 1) % images.length;
+          // update back to previous index
+          setBackIdx(prev);
+          // toggle which layer is visible
+          setShowFront((s) => !s);
+          return next;
+        });
+      }, interval);
+
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      };
+    }, [images, interval]);
+
+    const frontSrc = images && images[frontIdx] ? images[frontIdx].img : '';
+    const backSrc = images && images[backIdx] ? images[backIdx].img : '';
+
+    return (
+      <div style={{ position: 'relative', width: '100%', height, borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
+        <img
+          src={backSrc}
+          alt="back"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transition: 'opacity 600ms ease',
+            opacity: showFront ? 0 : 1,
+            transform: 'scale(1.02)'
+          }}
+        />
+        <img
+          src={frontSrc}
+          alt="front"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transition: 'opacity 600ms ease',
+            opacity: showFront ? 1 : 0,
+            transform: 'scale(1.02)'
+          }}
+        />
+        {/* overlay title */}
+        {images && images[frontIdx] && (
+          <div style={{ position: 'absolute', left: 20, bottom: 18, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{images[frontIdx].title}</div>
+            <div style={{ fontSize: 13, opacity: 0.9 }}>{images[frontIdx].date}</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Handle 3D model viewer open
+  const open3DViewer = (modelPath) => {
+    setActiveModel(modelPath);
+    setShow3DViewer(true);
+    // Store the model path for the editor
+    localStorage.setItem('lastViewedModel', modelPath);
+  };
+
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
+      {/* Modal for item details */}
+      {selectedItem && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: 32
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: 16,
+            maxWidth: 1000,
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setSelectedItem(null)}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'none',
+                border: 'none',
+                fontSize: 24,
+                cursor: 'pointer',
+                zIndex: 1
+              }}
+            >
+              ×
+            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{ position: 'relative', paddingTop: '56.25%' }}>
+                <img
+                  src={selectedItem.img}
+                  alt={selectedItem.title}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                />
+              </div>
+              <div style={{ padding: 32 }}>
+                <h2 style={{ fontSize: 28, marginBottom: 16 }}>{selectedItem.title}</h2>
+                <p style={{ fontSize: 16, color: '#666', marginBottom: 24 }}>{selectedItem.desc}</p>
+                
+                {selectedItem.specs && (
+                  <div style={{ marginBottom: 32 }}>
+                    <h3 style={{ fontSize: 20, marginBottom: 16 }}>Specifications</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24 }}>
+                      <div>
+                        <h4 style={{ fontSize: 16, color: '#888', marginBottom: 8 }}>Dimensions</h4>
+                        <p>Area: {selectedItem.specs.area}</p>
+                        <p>Height: {selectedItem.specs.height}</p>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: 16, color: '#888', marginBottom: 8 }}>Style & Materials</h4>
+                        <p>Style: {selectedItem.specs.style}</p>
+                        <p>Materials: {selectedItem.specs.materials.join(', ')}</p>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: 16, color: '#888', marginBottom: 8 }}>Features</h4>
+                        <ul style={{ paddingLeft: 20 }}>
+                          {selectedItem.specs.features.map((feature, idx) => (
+                            <li key={idx}>{feature}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                  {/* 3D Viewer Modal */}
+                  {show3DViewer && activeModel && (
+                    <div style={{
+                      position: 'fixed',
+                      inset: 0,
+                      backgroundColor: 'rgba(0,0,0,0.85)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 2000
+                    }}>
+                      <div style={{
+                        width: '90vw',
+                        height: '90vh',
+                        position: 'relative',
+                        background: '#000',
+                        borderRadius: 16,
+                        overflow: 'hidden'
+                      }}>
+                        <button
+                          onClick={() => {
+                            setShow3DViewer(false);
+                            setActiveModel(null);
+                          }}
+                          style={{
+                            position: 'absolute',
+                            top: 16,
+                            right: 16,
+                            background: 'rgba(255,255,255,0.1)',
+                            border: 'none',
+                            color: '#fff',
+                            borderRadius: '50%',
+                            width: 40,
+                            height: 40,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            zIndex: 1
+                          }}
+                        >
+                          ×
+                        </button>
+                        <ThreeDViewer modelPath={activeModel} />
+                      </div>
+                    </div>
+                  )}
+                <div style={{ display: 'flex', gap: 16, marginTop: 32 }}>
+                  <button
+                    onClick={() => open3DViewer(selectedItem && selectedItem.section ? `demo-${selectedItem.section}` : 'demo')}
+                    className="btn-soft"
+                  >
+                    Demo 3D
+                  </button>
+                  {selectedItem.model3D && (
+                    <button
+                      onClick={() => open3DViewer(selectedItem.model3D)}
+                      className="btn-coffee"
+                    >
+                      View in 3D
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      localStorage.setItem('selectedDesign', selectedItem.id);
+                      navigate('/editor');
+                    }}
+                    className="btn-coffee-ghost"
+                  >
+                    Open in Editor
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
   {/* Fixed button group (Day17 dashboard actions) */}
   <div style={{ position: 'fixed', top: 16, right: 16, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end', zIndex: 1000 }}>
         <button
@@ -561,7 +805,7 @@ export default function Home() {
         </div>
       </div>
       {/* Additional full-screen sections for scroll navigation */}
-      <section id="interior" className="card" style={{ minHeight: '100vh', padding: 48, position: 'relative', overflow: 'hidden' }}>
+      <section id="interior" className="card" style={{ minHeight: '100vh', padding: 48, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <video
           ref={(el) => (sectionVideoRefs.current['interior'] = el)}
           className="section-video"
@@ -575,22 +819,81 @@ export default function Home() {
         >
           <source src="/assets/interior.mp4" type="video/mp4" />
         </video>
-        <h2 style={{ fontSize: 28, marginBottom: 12 }}>Interior</h2>
-        <p className="muted">Explore interior layouts, materials, and finishes. Scroll to see the active dot change.</p>
-        <div style={{ marginTop: 24, position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: 16 }}>
-            {sampleData.interior.map(item => (
-              <article key={item.id} className="card" style={{ padding: 12, cursor: 'pointer' }} onClick={() => setSelectedItem({ ...item, section: 'interior' })}>
-                <img src={item.img} alt={item.title} style={{ width: '100%', borderRadius: 8 }} />
-                <h3 style={{ marginTop: 10, marginBottom: 4 }}>{item.title}</h3>
-                <div className="small-muted">{item.date}</div>
-              </article>
-            ))}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h2 style={{ fontSize: 36, marginBottom: 16, color: '#fff' }}>Interior Design</h2>
+          <p className="muted" style={{ fontSize: 18, maxWidth: 600, marginBottom: 32 }}>Explore our curated collection of interior spaces. Click any design to view the 3D walkthrough and detailed specifications.</p>
+          <Slideshow images={sampleData.interior} interval={3000} height={320} />
+        </div>
+        <div style={{ flex: 1, position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+              {sampleData.interior.map(item => (
+                <article 
+                  key={item.id} 
+                  className="card hover-card" 
+                  style={{ 
+                    padding: 0, 
+                    cursor: 'pointer',
+                    background: '#fff',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    transition: 'transform 0.2s ease-in-out',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                    height: '100%'
+                  }}
+                  onClick={() => setSelectedItem({ 
+                    ...item, 
+                    section: 'interior',
+                    model3D: `/models/${item.id}.glb`, // 3D model path
+                    specs: {
+                      area: '120 m²',
+                      height: '2.8m',
+                      style: 'Contemporary',
+                      materials: ['Natural Wood', 'Marble', 'Glass'],
+                      lighting: 'LED Ambient + Natural',
+                      features: ['Smart Home Integration', 'Sustainable Materials', 'Optimal Flow']
+                    }
+                  })}
+                >
+                  <div style={{ position: 'relative', paddingTop: '75%', overflow: 'hidden' }}>
+                    <img 
+                      src={item.img} 
+                      alt={item.title} 
+                      style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }} 
+                    />
+                  </div>
+                  <div style={{ padding: 20 }}>
+                    <h3 style={{ fontSize: 20, marginBottom: 8, color: '#333' }}>{item.title}</h3>
+                    <p style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>{item.desc}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="small-muted">{item.date}</div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); open3DViewer('demo-interior'); }}
+                          className="btn-soft"
+                          style={{ fontSize: 12, padding: '6px 8px' }}
+                        >
+                          Demo 3D
+                        </button>
+                        <div style={{ color: '#8b5e45', fontSize: 14 }}>View 3D ↗</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="exterior" className="card" style={{ minHeight: '100vh', padding: 48, position: 'relative', overflow: 'hidden' }}>
+      <section id="exterior" className="card" style={{ minHeight: '100vh', padding: 48, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <video
           ref={(el) => (sectionVideoRefs.current['exterior'] = el)}
           className="section-video"
@@ -604,22 +907,89 @@ export default function Home() {
         >
           <source src="/assets/exterior.mp4" type="video/mp4" />
         </video>
-        <h2 style={{ fontSize: 28, marginBottom: 12 }}>Exterior</h2>
-        <p className="muted">Exterior studies, facades, and landscape interactions.</p>
-        <div style={{ marginTop: 24, position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: 16 }}>
-            {sampleData.exterior.map(item => (
-              <article key={item.id} className="card" style={{ padding: 12, cursor: 'pointer' }} onClick={() => setSelectedItem({ ...item, section: 'exterior' })}>
-                <img src={item.img} alt={item.title} style={{ width: '100%', borderRadius: 8 }} />
-                <h3 style={{ marginTop: 10, marginBottom: 4 }}>{item.title}</h3>
-                <div className="small-muted">{item.date}</div>
-              </article>
-            ))}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h2 style={{ fontSize: 36, marginBottom: 16, color: '#fff' }}>Exterior Design</h2>
+          <p className="muted" style={{ fontSize: 18, maxWidth: 600, marginBottom: 32 }}>Discover our architectural facades and landscape designs. Experience each project in immersive 3D.</p>
+          <Slideshow images={sampleData.exterior} interval={3000} height={320} />
+        </div>
+        <div style={{ flex: 1, position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+              {sampleData.exterior.map(item => (
+                <article 
+                  key={item.id} 
+                  className="card hover-card" 
+                  style={{ 
+                    padding: 0, 
+                    cursor: 'pointer',
+                    background: '#fff',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    transition: 'transform 0.2s ease-in-out',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                    height: '100%'
+                  }}
+                  onClick={() => setSelectedItem({ 
+                    ...item, 
+                    section: 'exterior',
+                    model3D: `/models/${item.id}.glb`, // 3D model path
+                    specs: {
+                      area: item.id === 'ext-1' ? '450 m²' : item.id === 'ext-2' ? '850 m²' : '650 m²',
+                      height: item.id === 'ext-1' ? '12m' : item.id === 'ext-2' ? '4m' : '15m',
+                      style: item.id === 'ext-1' ? 'Modern Minimalist' : item.id === 'ext-2' ? 'Sustainable Garden' : 'Contemporary',
+                      materials: item.id === 'ext-1' ? 
+                        ['Steel', 'Glass', 'Concrete'] : 
+                        item.id === 'ext-2' ? 
+                        ['Natural Stone', 'Sustainable Wood', 'Native Plants'] :
+                        ['Glass', 'Steel', 'LED Lighting'],
+                      lighting: item.id === 'ext-1' ? 'Natural + LED Accent' : item.id === 'ext-2' ? 'Solar Garden Lights' : 'Dynamic LED System',
+                      features: item.id === 'ext-1' ? 
+                        ['Double-Height Windows', 'Solar Panels', 'Green Roof'] :
+                        item.id === 'ext-2' ? 
+                        ['Rain Water Harvesting', 'Native Landscaping', 'Meditation Areas'] :
+                        ['Smart Lighting', 'Infinity Pool', 'Panoramic Views']
+                    }
+                  })}
+                >
+                  <div style={{ position: 'relative', paddingTop: '75%', overflow: 'hidden' }}>
+                    <img 
+                      src={item.img} 
+                      alt={item.title} 
+                      style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }} 
+                    />
+                  </div>
+                  <div style={{ padding: 20 }}>
+                    <h3 style={{ fontSize: 20, marginBottom: 8, color: '#333' }}>{item.title}</h3>
+                    <p style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>{item.desc}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="small-muted">{item.date}</div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); open3DViewer('demo-exterior'); }}
+                          className="btn-soft"
+                          style={{ fontSize: 12, padding: '6px 8px' }}
+                        >
+                          Demo 3D
+                        </button>
+                        <div style={{ color: '#8b5e45', fontSize: 14 }}>View 3D ↗</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="culture" className="card" style={{ minHeight: '100vh', padding: 48, position: 'relative', overflow: 'hidden' }}>
+      <section id="culture" className="card" style={{ minHeight: '100vh', padding: 48, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <video
           ref={(el) => (sectionVideoRefs.current['culture'] = el)}
           className="section-video"
@@ -633,17 +1003,84 @@ export default function Home() {
         >
           <source src="/assets/culture.mp4" type="video/mp4" />
         </video>
-        <h2 style={{ fontSize: 28, marginBottom: 12 }}>Culture</h2>
-        <p className="muted">Research, culture, and community insights.</p>
-        <div style={{ marginTop: 24, position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: 16 }}>
-            {sampleData.culture.map(item => (
-              <article key={item.id} className="card" style={{ padding: 12, cursor: 'pointer' }} onClick={() => setSelectedItem({ ...item, section: 'culture' })}>
-                <img src={item.img} alt={item.title} style={{ width: '100%', borderRadius: 8 }} />
-                <h3 style={{ marginTop: 10, marginBottom: 4 }}>{item.title}</h3>
-                <div className="small-muted">{item.date}</div>
-              </article>
-            ))}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h2 style={{ fontSize: 36, marginBottom: 16, color: '#fff' }}>Cultural Integration</h2>
+          <p className="muted" style={{ fontSize: 18, maxWidth: 600, marginBottom: 32 }}>Experience how our designs integrate with communities and cultural contexts through interactive 3D spaces.</p>
+          <Slideshow images={sampleData.culture} interval={3000} height={320} />
+        </div>
+        <div style={{ flex: 1, position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+              {sampleData.culture.map(item => (
+                <article 
+                  key={item.id} 
+                  className="card hover-card" 
+                  style={{ 
+                    padding: 0, 
+                    cursor: 'pointer',
+                    background: '#fff',
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    transition: 'transform 0.2s ease-in-out',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                    height: '100%'
+                  }}
+                  onClick={() => setSelectedItem({ 
+                    ...item, 
+                    section: 'culture',
+                    model3D: `/models/${item.id}.glb`, // 3D model path
+                    specs: {
+                      area: item.id === 'cul-1' ? '300 m²' : item.id === 'cul-2' ? '180 m²' : '500 m²',
+                      height: item.id === 'cul-1' ? '4.5m' : item.id === 'cul-2' ? '3.8m' : '12m',
+                      style: item.id === 'cul-1' ? 'Community Space' : item.id === 'cul-2' ? 'Workshop Studio' : 'Urban Plaza',
+                      materials: item.id === 'cul-1' ? 
+                        ['Reclaimed Wood', 'Local Stone', 'Glass'] : 
+                        item.id === 'cul-2' ? 
+                        ['Traditional Materials', 'Handcrafted Elements', 'Natural Textiles'] :
+                        ['Urban Materials', 'Interactive Surfaces', 'Green Elements'],
+                      lighting: item.id === 'cul-1' ? 'Natural + Adjustable LED' : item.id === 'cul-2' ? 'Task + Ambient' : 'Dynamic Urban Lighting',
+                      features: item.id === 'cul-1' ? 
+                        ['Flexible Space', 'Digital Integration', 'Community Kitchen'] :
+                        item.id === 'cul-2' ? 
+                        ['Craft Stations', 'Material Library', 'Exhibition Space'] :
+                        ['Public Gathering', 'Cultural Events', 'Interactive Art']
+                    }
+                  })}
+                >
+                  <div style={{ position: 'relative', paddingTop: '75%', overflow: 'hidden' }}>
+                    <img 
+                      src={item.img} 
+                      alt={item.title} 
+                      style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }} 
+                    />
+                  </div>
+                  <div style={{ padding: 20 }}>
+                    <h3 style={{ fontSize: 20, marginBottom: 8, color: '#333' }}>{item.title}</h3>
+                    <p style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>{item.desc}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="small-muted">{item.date}</div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); open3DViewer('demo-culture'); }}
+                          className="btn-soft"
+                          style={{ fontSize: 12, padding: '6px 8px' }}
+                        >
+                          Demo 3D
+                        </button>
+                        <div style={{ color: '#8b5e45', fontSize: 14 }}>View 3D ↗</div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
